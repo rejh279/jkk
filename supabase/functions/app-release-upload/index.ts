@@ -1,7 +1,8 @@
-import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from 'npm:@aws-sdk/client-s3@3.899.0';
+import { PutObjectCommand, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from 'npm:@aws-sdk/client-s3@3.899.0';
 import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner@3.899.0';
 import { createHandler } from './handler.mjs';
 import { preventDestinationOverwrite } from './r2_destination.mjs';
+import { createR2Client } from './r2_client.mjs';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
@@ -14,7 +15,7 @@ const publicBase = Deno.env.get('R2_PUBLIC_BASE_URL') ?? '';
 const validatorUrl = Deno.env.get('APK_VALIDATOR_URL') ?? '';
 const validatorSecret = Deno.env.get('APK_VALIDATOR_SECRET') ?? '';
 const contentType = 'application/vnd.android.package-archive';
-const s3 = new S3Client({ region: 'auto', endpoint: `https://${account}.r2.cloudflarestorage.com`, credentials: { accessKeyId, secretAccessKey }, requestChecksumCalculation: 'WHEN_REQUIRED' });
+const s3 = createR2Client(account, { accessKeyId, secretAccessKey });
 
 async function authorize(authorization: string): Promise<string | null> {
   if (!validatorUrl.startsWith('https://') || validatorSecret.length < 32) throw new Error('APK validator not configured');
